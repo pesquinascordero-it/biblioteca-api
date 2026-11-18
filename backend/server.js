@@ -92,10 +92,10 @@ const server = http.createServer((req, res) => {
     }
 
     // Si piden MODIFICAR parte de un libro (PATCH /books/1)
-    if (req.method === 'PATCH' && url.pathname.startsWith('/books/')) {
+    if (req.method === 'PATCH' && url.pathname.startsWith('/books/')) { //usamos startWith y no === por que detras de /books/ puede ir cualquier numero
         // Sacamos el id de la ruta y buscamos ese libro
-        const id = url.pathname.split('/')[2];
-        const book = books.find((b) => String(b.id) === id); //Mira los libros uno por uno y devuélveme el libro cuyo id coincide con el que busco. te dice el libro no donde esta como findIndex
+        const id = url.pathname.split('/')[2]; // cortamos por trzos la url y nos quedamos con la posicion 2 que es la del numero /.../numero (pos 2)
+        const book = books.find((b) => String(b.id) === id); //Mira los libros uno por uno (los va metiendo en b) y devuélve el libro cuyo id coincide con el que busco. te dice el libro no donde esta como findIndex
 
         // Si no existe, respondemos 404
         if (!book) {
@@ -105,18 +105,18 @@ const server = http.createServer((req, res) => {
         }
 
         // Leemos los cambios que envía la página (igual que en el POST)
-        let body = '';
+        let body = ''; //creamos una variable body vacia, donde iremos metiendo lo que envíe la página
         req.on('data', (trozo) => {
-            body += trozo;
+            body += trozo; //cada vez que llegue un trozo del libro lo iremos metiendo a body
         });
 
-        req.on('end', () => {
-            const changes = JSON.parse(body);   // ej: { available: false }
+        req.on('end', () => { //cuando haya llegado todo...
+            const changes = JSON.parse(body);   // Convierte el texto en un objeto y lo metemos a changes (quitamos las comillas). ahora changes = { available: false }
             Object.assign(book, changes);       // aplicamos los cambios al libro
 
             // Respondemos 200 con el libro ya modificado
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(book));
+            res.writeHead(200, { 'Content-Type': 'application/json' }); //convierte el libro (que es un objeto) en texto, porque por la red solo viaja texto. Es lo contrario de JSON.parse.
+            res.end(JSON.stringify(book));//nvía ese texto a la página y cierra la respuesta. la pagina recibe: {"id":1,"title":"Rayuela",...,"available":false}
         });
 
         return;
@@ -126,7 +126,7 @@ const server = http.createServer((req, res) => {
     if (req.method === 'PUT' && url.pathname.startsWith('/books/')) {
         // Sacamos el id y buscamos en qué posición está (como en el DELETE)
         const id = url.pathname.split('/')[2];
-        const position = books.findIndex((b) => String(b.id) === id);
+        const position = books.findIndex((b) => String(b.id) === id); //Mira los libros uno por uno (los mete en b) y devuélve el numero de la pos cuyo id coincide con el que busco.
 
         if (position === -1) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -135,14 +135,14 @@ const server = http.createServer((req, res) => {
         }
 
         // Leemos el libro nuevo que envía la página (como en el POST)
-        let body = '';
+        let body = ''; //cremaos body que esta vacio para meter trozos (esta vez los trozos no es un mensaje, es el libro)
         req.on('data', (trozo) => {
             body += trozo;
         });
 
-        req.on('end', () => {
-            const updatedBook = JSON.parse(body);
-            updatedBook.id = books[position].id;   // conserva el mismo id que tenía
+        req.on('end', () => { //cuando llega al final...
+            const updatedBook = JSON.parse(body); //convertimos el texto en un objeto y esto lo metemos en la variable updateBook. todavia no hay id
+            updatedBook.id = books[position].id;   // conserva el mismo id que tenía el libro antiguo
             books[position] = updatedBook;         // sustituye el libro viejo por el nuevo
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
