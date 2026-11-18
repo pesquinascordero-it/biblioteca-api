@@ -49,6 +49,11 @@ const server = http.createServer((req, res) => {
         if (available === 'false') {
             result = result.filter((b) => b.available === false); //lo mismo pero nos quedamos con los libros que tienen available = false. filter lo que haces es mirar libro a libro (b) y se queda con los que cumplen la condicion
         }
+        
+        const genre =url.searchParams.get('genre');
+        if (genre){
+            result = result.filter ((b) => (b.genre || '').toLowerCase() === genre.toLowerCase()); //si han escrito un género, quédate solo con los libros cuyo género sea igual a ese. to lowercase para que lea minuscula tambien
+        }
 
         res.writeHead(200, { 'Content-Type': 'application/json' }); //Responde 200, con la etiqueta de JSON. Igual que antes.
         res.end(JSON.stringify({ //envía la respuesta en formato texto a la página. espera los compartimentos que tiene la caja...
