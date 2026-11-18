@@ -36,11 +36,24 @@ const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://localhost');
 
     // Si piden LEER los libros (GET /books), respondemos con la lista
+    // Si piden LEER los libros (GET /books), respondemos con la lista
     if (req.method === 'GET' && url.pathname === '/books') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            data: books,
-            pagination: { page: 1, limit: 10, total: books.length, totalPages: 1 },
+        // Empezamos con todos los libros
+        let result = books; //creamos una lista de trabajo y la llamamos result y empieza con todos los libros. ponemos let por que va a ir cambiando
+
+        // Filtro de disponibilidad (?available=true o ?available=false)
+        const available = url.searchParams.get('available'); //lee el parametro available de la URL y lo guarda en una variable que se llama available
+        if (available === 'true') { //si elegimos available = true...
+            result = result.filter((b) => b.available === true); // nos quedamos con los libros cuyo available = true
+        }
+        if (available === 'false') {
+            result = result.filter((b) => b.available === false); //lo mismo pero nos quedamos con los libros que tienen available = false. filter lo que haces es mirar libro a libro (b) y se queda con los que cumplen la condicion
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' }); //Responde 200, con la etiqueta de JSON. Igual que antes.
+        res.end(JSON.stringify({ //envía la respuesta en formato texto a la página. espera los compartimentos que tiene la caja...
+            data: result, // los libros que se van a filtrar y que se van a mostrar en la tabla
+            pagination: { page: 1, limit: 10, total: result.length, totalPages: 1 }, //informacion sobre las paginas
         }));
         return;
     }
