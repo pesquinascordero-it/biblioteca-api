@@ -39,7 +39,7 @@ const server = http.createServer((req, res) => {
     // Si piden LEER los libros (GET /books), respondemos con la lista
     if (req.method === 'GET' && url.pathname === '/books') {
         // Empezamos con todos los libros
-        let result = books; //creamos una lista de trabajo y la llamamos result y empieza con todos los libros. ponemos let por que va a ir cambiando
+        let result = [...books]; //creamos una copia de la lista de trabajo y la llamamos result y empieza con todos los libros. ponemos let por que va a ir cambiando
 
         // Filtro de disponibilidad (?available=true o ?available=false)
         const available = url.searchParams.get('available'); //lee el parametro available de la URL y lo guarda en una variable que se llama available
@@ -60,6 +60,20 @@ const server = http.createServer((req, res) => {
             const text = q.toLowerCase();
             result = result.filter ((b) => b.title.toLowerCase().includes(text) || b.author.toLowerCase().includes(text));
         }
+
+        const sort = url.searchParams.get('sort') || 'title'; //ordenamos por titulo/año/autor... y si no se ordena por el titulo
+        const order =url.searchParams.get('order'); //ordenamos por ascendente o descendente
+
+        result.sort((a,b) => {
+            if (a[sort] < b[sort]) return -1; //a va antes 
+            if (a[sort] > b[sort]) return 1; //a va despues
+            return 0; //son iguales
+        });
+
+        if (order === 'desc') {
+            result.reverse(); //si piden descendente le damos la vuelta
+        }
+
 
         res.writeHead(200, { 'Content-Type': 'application/json' }); //Responde 200, con la etiqueta de JSON. Igual que antes.
         res.end(JSON.stringify({ //envía la respuesta en formato texto a la página. espera los compartimentos que tiene la caja...
