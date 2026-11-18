@@ -55,6 +55,12 @@ const server = http.createServer((req, res) => {
             result = result.filter ((b) => (b.genre || '').toLowerCase() === genre.toLowerCase()); //si han escrito un género, quédate solo con los libros cuyo género sea igual a ese. to lowercase para que lea minuscula tambien
         }
 
+        const q = url.searchParams.get('q');
+        if (q){
+            const text = q.toLowerCase();
+            result = result.filter ((b) => b.title.toLowerCase().includes(text) || b.author.toLowerCase().includes(text));
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json' }); //Responde 200, con la etiqueta de JSON. Igual que antes.
         res.end(JSON.stringify({ //envía la respuesta en formato texto a la página. espera los compartimentos que tiene la caja...
             data: result, // los libros que se van a filtrar y que se van a mostrar en la tabla
