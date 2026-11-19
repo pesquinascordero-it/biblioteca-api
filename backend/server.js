@@ -49,22 +49,22 @@ const server = http.createServer((req, res) => {
         if (available === 'false') {
             result = result.filter((b) => b.available === false); //lo mismo pero nos quedamos con los libros que tienen available = false. filter lo que haces es mirar libro a libro (b) y se queda con los que cumplen la condicion
         }
-        
-        const genre =url.searchParams.get('genre');
-        if (genre){
-            result = result.filter ((b) => (b.genre || '').toLowerCase() === genre.toLowerCase()); //si han escrito un género, quédate solo con los libros cuyo género sea igual a ese. to lowercase para que lea minuscula tambien
+
+        const genre = url.searchParams.get('genre');
+        if (genre) {
+            result = result.filter((b) => (b.genre || '').toLowerCase() === genre.toLowerCase()); //si han escrito un género, quédate solo con los libros cuyo género sea igual a ese. to lowercase para que lea minuscula tambien
         }
 
         const q = url.searchParams.get('q');
-        if (q){
+        if (q) {
             const text = q.toLowerCase();
-            result = result.filter ((b) => b.title.toLowerCase().includes(text) || b.author.toLowerCase().includes(text));
+            result = result.filter((b) => b.title.toLowerCase().includes(text) || b.author.toLowerCase().includes(text));
         }
 
         const sort = url.searchParams.get('sort') || 'title'; //ordenamos por titulo/año/autor... y si no se ordena por el titulo
-        const order =url.searchParams.get('order'); //ordenamos por ascendente o descendente
+        const order = url.searchParams.get('order'); //ordenamos por ascendente o descendente
 
-        result.sort((a,b) => {
+        result.sort((a, b) => {
             if (a[sort] < b[sort]) return -1; //a va antes 
             if (a[sort] > b[sort]) return 1; //a va despues
             return 0; //son iguales
@@ -74,11 +74,21 @@ const server = http.createServer((req, res) => {
             result.reverse(); //si piden descendente le damos la vuelta
         }
 
+        // Paginación (?page=2&limit=5)
+        const page = Number(url.searchParams.get('page')) || 1;     // guardar en page qué página se pide en número, si no lo dicen, por defecto, la 1
+        const limit = Number(url.searchParams.get('limit')) || 10;  // cuántos libros por página (por defecto, 10)
+
+        const total = result.length;                    // cuántos libros hay en total , lo guarda en total que es la lista ya filtrada y ordenada
+        const totalPages = Math.ceil(total / limit) || 1;  // divide el numero total de libros entre los que caben en cada pagina. math.ceil es para redondear hacia arriba si hay decimales. si no hay libros muestra al menos una pagina
+
+        const start = (page - 1) * limit;               // desde qué posición empezamos. que libros empieza la pagina que se pide
+        const pageBooks = result.slice(start, start + limit);  // cortamos solo los libros de esa página. result slide es desde - hasta
+
 
         res.writeHead(200, { 'Content-Type': 'application/json' }); //Responde 200, con la etiqueta de JSON. Igual que antes.
         res.end(JSON.stringify({ //envía la respuesta en formato texto a la página. espera los compartimentos que tiene la caja...
-            data: result, // los libros que se van a filtrar y que se van a mostrar en la tabla
-            pagination: { page: 1, limit: 10, total: result.length, totalPages: 1 }, //informacion sobre las paginas
+            data: pageBooks, // los libros que se van a filtrar y que se van a mostrar en la tabla
+            pagination: { page, limit, total, totalPages }, //informacion sobre las paginas
         }));
         return;
     }
