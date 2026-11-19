@@ -105,6 +105,26 @@ const server = http.createServer((req, res) => {
         // 2. Cuando ya han llegado todos los trozos...
         req.on('end', () => { //cuando haya llegado todo el libro, terminamos (el parentesis vacio es que ya no llegan mas trozos)
             const newBook = JSON.parse(body); //el libro le ha llegado en formato texto, esta linea convierte el texto en un objeto y lo guarda en la variable. con el objeto si podemos trabajar
+
+            if (!newBook.title) { //si no se escribe el titulo al crear un libro la validacion lo impide y te llega un error 400 (peticion incorrecta)
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: { message: 'El título es obligatorio' } }));
+                return;
+            }
+
+            if (!newBook.author) { //si no se escribe el autor al crear un libro la validacion lo impide y te llega un error 400 (peticion incorrecta)
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: { message: 'El autor es obligatorio' } }));
+                return;
+            }
+
+            const currentYear = new Date().getFullYear(); //coge la fecha de hoy y de esa fecha coge solo el año y lo mete a la variable
+            if (!Number.isInteger(newBook.year) || newBook.year > currentYear) { //si el año no es un numero entero o es mayor que el año actual...
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: { message: 'El año debe ser un número y no puede ser futuro' } }));
+                return;
+            }
+
             newBook.id = nextId; //añadimos un campo id al libro, con valor nexId
             nextId++; //sumale 1 al id del siguiente libro
             books.push(newBook); //añade al final de la lista de books el nuevo libro
