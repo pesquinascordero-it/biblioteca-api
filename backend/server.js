@@ -210,6 +210,26 @@ const server = http.createServer((req, res) => {
 
         req.on('end', () => { //cuando llega al final...
             const updatedBook = JSON.parse(body); //convertimos el texto en un objeto y esto lo metemos en la variable updateBook. todavia no hay id
+
+            if (!updatedBook.title) { //si no se escribe el titulo al crear un libro la validacion lo impide y te llega un error 400 (peticion incorrecta)
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: { message: 'El título es obligatorio' } }));
+                return;
+            }
+
+            if (!updatedBook.author) { //si no se escribe el autor al crear un libro la validacion lo impide y te llega un error 400 (peticion incorrecta)
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: { message: 'El autor es obligatorio' } }));
+                return;
+            }
+
+            const currentYear = new Date().getFullYear(); //coge la fecha de hoy y de esa fecha coge solo el año y lo mete a la variable
+            if (!Number.isInteger(updatedBook.year) || updatedBook.year > currentYear) { //si el año no es un numero entero o es mayor que el año actual...
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: { message: 'El año debe ser un número y no puede ser futuro' } }));
+                return;
+            }
+
             updatedBook.id = books[position].id;   // conserva el mismo id que tenía el libro antiguo
             books[position] = updatedBook;         // sustituye el libro viejo por el nuevo
 
