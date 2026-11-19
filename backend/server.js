@@ -104,7 +104,15 @@ const server = http.createServer((req, res) => {
 
         // 2. Cuando ya han llegado todos los trozos...
         req.on('end', () => { //cuando haya llegado todo el libro, terminamos (el parentesis vacio es que ya no llegan mas trozos)
-            const newBook = JSON.parse(body); //el libro le ha llegado en formato texto, esta linea convierte el texto en un objeto y lo guarda en la variable. con el objeto si podemos trabajar
+            let newBook;
+            try {
+                newBook = JSON.parse(body);   // intentamos convertir el texto en objeto
+            } catch {
+                // si el texto no es JSON válido, respondemos 400 en vez de caernos
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: { message: 'Los datos no tienen un formato JSON válido' } }));
+                return;
+            }
 
             if (!newBook.title) { //si no se escribe el titulo al crear un libro la validacion lo impide y te llega un error 400 (peticion incorrecta)
                 res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -179,7 +187,14 @@ const server = http.createServer((req, res) => {
         });
 
         req.on('end', () => { //cuando haya llegado todo...
-            const changes = JSON.parse(body);   // Convierte el texto en un objeto y lo metemos a changes (quitamos las comillas). ahora changes = { available: false }
+            let changes;
+            try {
+                changes = JSON.parse(body);
+            } catch {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: { message: 'Los datos no tienen un formato JSON válido' } }));
+                return;
+            }
             Object.assign(book, changes);       // aplicamos los cambios al libro
 
             // Respondemos 200 con el libro ya modificado
@@ -209,7 +224,14 @@ const server = http.createServer((req, res) => {
         });
 
         req.on('end', () => { //cuando llega al final...
-            const updatedBook = JSON.parse(body); //convertimos el texto en un objeto y esto lo metemos en la variable updateBook. todavia no hay id
+            let updatedBook;
+            try {
+                updatedBook = JSON.parse(body);
+            } catch {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: { message: 'Los datos no tienen un formato JSON válido' } }));
+                return;
+            }
 
             if (!updatedBook.title) { //si no se escribe el titulo al crear un libro la validacion lo impide y te llega un error 400 (peticion incorrecta)
                 res.writeHead(400, { 'Content-Type': 'application/json' });
