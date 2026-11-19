@@ -156,7 +156,7 @@ const server = http.createServer((req, res) => {
         // Si no existe, respondemos 404
         if (position === -1) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Libro no encontrado' }));
+            res.end(JSON.stringify({ error: {message: 'Libro no encontrado' } }));
             return;
         }
 
@@ -176,7 +176,7 @@ const server = http.createServer((req, res) => {
         // Si no existe, respondemos 404
         if (!book) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Libro no encontrado' }));
+            res.end(JSON.stringify({ error: {message: 'Libro no encontrado' } }));
             return;
         }
 
@@ -213,7 +213,7 @@ const server = http.createServer((req, res) => {
 
         if (position === -1) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Libro no encontrado' }));
+            res.end(JSON.stringify({ error: {message: 'Libro no encontrado' } }));
             return;
         }
 
@@ -264,7 +264,7 @@ const server = http.createServer((req, res) => {
 
     // Si no ha coincidido ninguna ruta, respondemos 404 (no encontrado)
     res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Ruta no encontrada' }));
+    res.end(JSON.stringify({ error: {message:'Ruta no encontrada' } }));
 });
 
 // Arrancamos el servidor y nos quedamos esperando peticiones
