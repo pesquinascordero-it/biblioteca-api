@@ -1,8 +1,8 @@
 // Importamos el módulo HTTP que trae Node de serie
 const http = require('node:http');
 
-// Puerto donde escuchará el servidor
-const PORT = 3000;
+// Puerto donde escuchará el servidor: el que digan al arrancar, o el 3000 por defecto
+const PORT = process.env.PORT || 3000;
 
 // Lista de libros (escrito a mano)
 const books = [
