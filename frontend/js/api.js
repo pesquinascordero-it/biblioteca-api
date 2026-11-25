@@ -6,7 +6,11 @@
 // tocar API_URL.
 // ============================================================
 
-const API_URL = 'http://localhost:3000';
+// En tu ordenador, la API está en localhost:3000.
+// Publicada, está en el mismo sitio que la página, así que no hace falta poner dirección.
+const API_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:')
+  ? 'http://localhost:3000'
+  : '';
 
 // Error con el código de estado y los detalles que devuelve la API
 class ApiError extends Error {
@@ -20,7 +24,7 @@ class ApiError extends Error {
 const api = {
   // La página asigna aquí una función para enterarse de cada petición
   // (la usa para pintar el registro de "Peticiones HTTP").
-  onRequest: () => {},
+  onRequest: () => { },
 
   // Función genérica: envía una petición y devuelve el JSON de la respuesta
   async request(method, path, body) {
@@ -70,9 +74,9 @@ const api = {
     return this.request('GET', `/books?${query}`);
   },
 
-  getBook(id)           { return this.request('GET',    `/books/${encodeURIComponent(id)}`); },
-  createBook(book)      { return this.request('POST',   '/books', book); },
-  replaceBook(id, book) { return this.request('PUT',    `/books/${encodeURIComponent(id)}`, book); },
-  updateBook(id, data)  { return this.request('PATCH',  `/books/${encodeURIComponent(id)}`, data); },
-  deleteBook(id)        { return this.request('DELETE', `/books/${encodeURIComponent(id)}`); },
+  getBook(id) { return this.request('GET', `/books/${encodeURIComponent(id)}`); },
+  createBook(book) { return this.request('POST', '/books', book); },
+  replaceBook(id, book) { return this.request('PUT', `/books/${encodeURIComponent(id)}`, book); },
+  updateBook(id, data) { return this.request('PATCH', `/books/${encodeURIComponent(id)}`, data); },
+  deleteBook(id) { return this.request('DELETE', `/books/${encodeURIComponent(id)}`); },
 };

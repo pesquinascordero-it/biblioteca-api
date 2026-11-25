@@ -1,149 +1,188 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Biblioteca</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
+  <!-- ===== Cabecera ===== -->
   <header class="top">
-    <div>
+    <div class="brand">
       <h1>Biblioteca</h1>
-      <p class="subtitle">Gestión de libros a través de una API REST</p>
+      <p id="shelf-summary" class="summary">Cargando la estantería…</p>
     </div>
 
     <!-- Interruptor entre la API real y los datos de prueba -->
-    <label class="mode">
+    <label class="switch">
       <input type="checkbox" id="demo-mode">
-      <span>Modo demo <small>(sin servidor)</small></span>
+      <span class="switch-track" aria-hidden="true"></span>
+      <span>Modo demo <small>sin servidor</small></span>
     </label>
   </header>
 
-  <!-- Aviso que aparece cuando no se puede conectar con la API -->
-  <div id="connection-banner" class="banner" hidden>
+  <!-- Aviso cuando no se puede conectar con la API -->
+  <div id="connection-banner" class="banner" role="alert" hidden>
     <span id="connection-message"></span>
-    <button type="button" id="banner-demo-btn" class="btn btn-small">Usar modo demo</button>
+    <button type="button" id="banner-demo-btn" class="btn btn-quiet">Usar modo demo</button>
   </div>
 
-  <main class="layout">
+  <main>
 
-    <!-- ===== Formulario para crear / editar ===== -->
-    <section class="card form-card">
-      <h2 id="form-title">Añadir libro</h2>
+    <!-- ===== Buscador y filtros ===== -->
+    <form id="filters" class="filters" role="search">
+      <label class="field field-search">
+        <span class="visually-hidden">Buscar por título o autor</span>
+        <input type="search" id="f-q" placeholder="Busca por título o autor">
+      </label>
 
-      <form id="book-form" novalidate>
-        <input type="hidden" id="book-id">
+      <label class="field">
+        <span class="field-label">Género</span>
+        <input type="text" id="f-genre" placeholder="Cualquiera" list="genre-list">
+      </label>
 
-        <label>Título *
-          <input type="text" id="title" maxlength="200">
-        </label>
-
-        <label>Autor *
-          <input type="text" id="author" maxlength="120">
-        </label>
-
-        <div class="row">
-          <label>Año *
-            <input type="number" id="year" step="1">
-          </label>
-          <label>Género
-            <input type="text" id="genre" maxlength="50" list="genre-list">
-          </label>
-        </div>
-
-        <label>ISBN
-          <input type="text" id="isbn" placeholder="978…">
-        </label>
-
-        <label class="check">
-          <input type="checkbox" id="available" checked>
-          Disponible para préstamo
-        </label>
-
-        <!-- Aquí se muestran los errores de validación que devuelve la API -->
-        <div id="form-errors" class="errors" hidden></div>
-
-        <div class="actions">
-          <button type="submit" class="btn btn-primary" id="submit-btn">Guardar</button>
-          <button type="button" class="btn" id="cancel-btn" hidden>Cancelar</button>
-        </div>
-      </form>
-
-      <datalist id="genre-list">
-        <option value="Novela"><option value="Misterio"><option value="Ciencia ficción">
-        <option value="Relatos"><option value="Infantil"><option value="Programación">
-      </datalist>
-    </section>
-
-    <!-- ===== Listado con filtros y paginación ===== -->
-    <section class="card list-card">
-      <form id="filters" class="filters">
-        <input type="search" id="f-q" placeholder="Buscar por título o autor">
-        <input type="text" id="f-genre" placeholder="Género" list="genre-list">
+      <label class="field">
+        <span class="field-label">Estado</span>
         <select id="f-available">
           <option value="">Todos</option>
-          <option value="true">Disponibles</option>
+          <option value="true">En la estantería</option>
           <option value="false">Prestados</option>
         </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Ordenar por</span>
         <select id="f-sort">
-          <option value="title">Ordenar: título</option>
-          <option value="author">Ordenar: autor</option>
-          <option value="year">Ordenar: año</option>
-          <option value="createdAt">Ordenar: fecha de alta</option>
+          <option value="title">Título</option>
+          <option value="author">Autor</option>
+          <option value="year">Año</option>
         </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Sentido</span>
         <select id="f-order">
           <option value="asc">Ascendente</option>
           <option value="desc">Descendente</option>
         </select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Por página</span>
         <select id="f-limit">
-          <option value="5">5 por página</option>
-          <option value="10" selected>10 por página</option>
-          <option value="20">20 por página</option>
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
         </select>
-      </form>
+      </label>
+    </form>
 
-      <div id="list-status" class="list-status"></div>
+    <!-- ===== La estantería (el listado de libros) ===== -->
+    <section class="shelf-area" aria-labelledby="shelf-heading">
+      <h2 id="shelf-heading" class="visually-hidden">Libros</h2>
 
-      <div class="table-wrap">
-      <table class="books">
-        <thead>
-          <tr>
-            <th>Título</th>
-            <th>Autor</th>
-            <th>Año</th>
-            <th>Género</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="books-body"></tbody>
-      </table>
+      <div class="shelf-scroll">
+        <ul id="shelf" class="shelf" aria-describedby="shelf-help"></ul>
       </div>
+      <p id="shelf-help" class="shelf-help">Pulsa un libro para ver sus datos. Los huecos son libros prestados.</p>
 
-      <nav class="pagination">
-        <button type="button" class="btn btn-small" id="prev-btn">← Anterior</button>
+      <nav class="pagination" aria-label="Páginas">
+        <button type="button" class="btn btn-quiet" id="prev-btn">Anterior</button>
         <span id="page-info"></span>
-        <button type="button" class="btn btn-small" id="next-btn">Siguiente →</button>
+        <button type="button" class="btn btn-quiet" id="next-btn">Siguiente</button>
       </nav>
     </section>
 
-    <!-- ===== Registro de peticiones HTTP (para aprender) ===== -->
-    <section class="card log-card">
-      <div class="log-head">
-        <h2>Peticiones HTTP</h2>
-        <button type="button" class="btn btn-small" id="clear-log-btn">Limpiar</button>
-      </div>
-      <p class="hint">Cada acción de la página envía una petición a la API. Aquí ves el método, la ruta y el código de estado de la respuesta.</p>
-      <ol id="request-log" class="log"></ol>
-    </section>
+    <div class="desk">
 
+      <!-- ===== Ficha del libro seleccionado ===== -->
+      <section class="panel" aria-labelledby="detail-heading" aria-live="polite">
+        <h2 id="detail-heading">Ficha</h2>
+        <div id="detail"></div>
+      </section>
+
+      <!-- ===== Formulario para crear / editar ===== -->
+      <section class="panel" aria-labelledby="form-title">
+        <h2 id="form-title">Añadir un libro</h2>
+
+        <form id="book-form" novalidate>
+          <label class="field">
+            <span class="field-label">Título</span>
+            <input type="text" id="title" maxlength="200" required>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Autor</span>
+            <input type="text" id="author" maxlength="120" required>
+          </label>
+
+          <div class="row">
+            <label class="field">
+              <span class="field-label">Año</span>
+              <input type="number" id="year" step="1" required>
+            </label>
+            <label class="field">
+              <span class="field-label">Género <small>opcional</small></span>
+              <input type="text" id="genre" maxlength="50" list="genre-list">
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="field-label">ISBN <small>opcional</small></span>
+            <input type="text" id="isbn" placeholder="978…">
+          </label>
+
+          <label class="check">
+            <input type="checkbox" id="available" checked>
+            Está en la estantería (no prestado)
+          </label>
+
+          <!-- Errores que devuelve la API (400, 404...) -->
+          <div id="form-errors" class="form-errors" role="alert" hidden></div>
+
+          <div class="actions">
+            <button type="submit" class="btn btn-primary" id="submit-btn">Añadir a la estantería</button>
+            <button type="button" class="btn btn-quiet" id="cancel-btn" hidden>Cancelar</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <!-- ===== Registro de peticiones HTTP (para aprender) ===== -->
+    <details class="log" open>
+      <summary>Peticiones HTTP <span id="log-count" class="log-count"></span></summary>
+      <p class="log-help">Cada acción de la página envía una petición a la API. Aquí ves el método, la ruta y el código
+        de estado de la respuesta.</p>
+      <button type="button" class="btn btn-quiet btn-small" id="clear-log-btn">Vaciar registro</button>
+      <ol id="request-log" class="log-list"></ol>
+    </details>
+
+    <datalist id="genre-list">
+      <option value="Novela">
+      <option value="Misterio">
+      <option value="Ciencia ficción">
+      <option value="Relatos">
+      <option value="Infantil">
+      <option value="Programación">
+    </datalist>
   </main>
+
+  <!-- Avisos breves tras cada acción -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- Orden importante: primero la capa de API, luego la lógica de la página -->
   <script src="js/api.js"></script>
   <script src="js/demo-api.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>
